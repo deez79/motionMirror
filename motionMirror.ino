@@ -1,8 +1,8 @@
 //**************************************************************************************
 //
-//  TITLE:   MotionMirror
-//  AUTHOR:  @deez79
-//  DATE:    12/22/2015
+//  TITLE:      Motion Mirror 
+//  AUTHOR:     deez79 
+//  DATE:       04/09/2018 (refactor) 
 //
 //**************************************************************************************
 
@@ -11,86 +11,40 @@
 //**************************************************************************************
 // Info
 //**************************************************************************************
+
 /*
-	This project is for creating a motion activated light, that back lights a mirror frame.
-	It uses a multi-color LED strip.
-	
-	Originally based on Adafruits code:
-	https://learn.adafruit.com/rgb-led-strips/example-code
-	
-	
+
+    This project uses a PIR sensor to trigger LED strip lights.
+    
+
  */
  
 //***************************************************************************************
 // Schematic
 //***************************************************************************************
+
 /*
 
-Arduino
-____________
-|          |
-|     12   |------------------------------------- PIR Sensor Middle Pin ----------------------------------
-|          |                                        
-|      6   |-------------------------------------/\/\/\/\ ------ Base pin of mosfet for Green ------------
-|          |                                                              
-|          |                                                              
-|      5   |-------------------------------------/\/\/\/\ ------ Base pin of mosfet for Red --------------
-|          |                                          
-|          |                                        
-|      3   |-------------------------------------/\/\/\/\ ------ Base pin of mosfet for Blue -------------
-|          |                                        
-|          |                                        
-|     5v   |----------------------------------------------------+                       
-|          |                                                              
-|     gnd  |--------------------------------------------------------------
-|          |
+Teensy 3.0
+____________                                           _______                                                    
+|          |                                          /       \
+|          |                                        +-----------+
+|     12   |----------------------------------------|   PIR     |
+|          |                                        +-----------+
+|          |                                            |   |          
+|     6    |-------/\/\/\/\------->|G---------------+   |   |
+|          |                                        |   |   | 
+|     5    |-------/\/\/\/\------->|R---------------+   |   |
+|          |                                        |   |   |                       
+|     3    |------/\/\/\/\-------->|B---------------+   |   |
+|          |                                        |   |   |
+|          |                                        |   |   |
+|          |                                        |   |   |
+|     gnd  |----------------------------------------+---+   |
+|          |                                                |
+|     5v   |------------------------------------------------+
 |          |
 ------------
-
-
-                                        TIP120 Mosfet
-                                        _____________
-                                        |           |
---------Base (Gate)---------------------|           |
-                                        |           |
---------Collector (Drain)---------------|           |
-                                        |           |
---------Emitter (Source)----------------|           |
-                                        |           |
-                                        _____________
-
-
-                                        TIP120 Mosfet
-                                        _____________
-                                        |           |
---/\/\/\------Arduino Pin for Color-----|           |
-                                        |           |
---------Wire to LED Strip Color Pin-----|           |
-                                        |           |
---------Common Ground ------------------|           |
-                                        |           |
-                                        _____________
-
-
-
-                                        PIR Sensor
-                                        ______________
-                                        |            |
-                                        |            |
- ----------- Positive voltage (5v)------|            |
-                                        |            |
- ----------- Arduino Pin (12) ----------|            |
-                                        |            |
- ----------- Common Ground (Gnd)--------|            |
-                                        |            |
-                                        |            |
-                                        ______________
-
-
-Wiring examples taken from:
-https://learn.adafruit.com/assets/2692      LED Strip
-
-https://learn.adafruit.com/assets/543       PIR Sensor
 
 */
 
@@ -101,71 +55,76 @@ https://learn.adafruit.com/assets/543       PIR Sensor
 //*****************************************
 // Constants
 //*****************************************
-
-#define REDPIN 5
+ 
+#define REDPIN 5 
 #define GREENPIN 6
 #define BLUEPIN 3
+#define pirPin 12
 
-#define pirPin 12       
-
-
+#define FADESPEED 6     // make this higher to slow down
 
 //*****************************************
 // Variables
 //*****************************************
 
 int motionDetect = 0; 
-int FADESPEED = 5;          // make this higher to slow down
-int waitTime = 500;         // wait time used as a base to multiply against.
+int r, g, b, a, flash;
+int control_var = 0;
+int control_var_prev_state = 0;
 
 //*****************************************
 // Functions
 //*****************************************
 
-void red(){
-    int r;
-    for (r = 0; r < 256; r++) { 
-        analogWrite(REDPIN, r);
-        delay(FADESPEED);
-  } 
-}
-
-void appOff(){
-    analogWrite(GREENPIN, 0);
-	analogWrite(BLUEPIN, 0);
-	analogWrite(REDPIN, 0);
+void SM_mm () {
+    switch (control_var) {
+        case 0: // Reset!
+            control_var = 1;
+            break;
+            
+        case 1: // Start 
+            
+            break;
+            
+        case 2: // 
+            
+            break;
+    }
 }
 
 //*****************************************
 // Setup
 //*****************************************
 void setup() {
+    
+    pinMode(REDPIN, OUTPUT);
+    pinMode(GREENPIN, OUTPUT);
+    pinMode(BLUEPIN, OUTPUT);
+    pinMode(pirPin, INPUT);
 
-  pinMode(REDPIN, OUTPUT);
-  pinMode(GREENPIN, OUTPUT);
-  pinMode(BLUEPIN, OUTPUT);
-  pinMode(pirPin, INPUT);
-  
-}
+}	//end setup()
  
 //*****************************************
 // Loop
 //*****************************************
 void loop(){  
-
-int r, g, b, a, flash;
-motionDetect = digitalRead(pirPin);
+    
+    motionDetect = digitalRead(pirPin);
+    
 	if (motionDetect == HIGH){
-			delay(waitTime);
+			delay(500);
 			if (motionDetect == HIGH){
-				red();
-				delay(waitTime*2);
+				for (r = 0; r < 256; r++) { 
+					analogWrite(REDPIN, r);
+					delay(FADESPEED);
+				}
+				delay(1000);
 				for (a = 0; a < 256; a++) { 
 					analogWrite(GREENPIN, a);
 					analogWrite(BLUEPIN, a);
 					delay(FADESPEED);
 				}
-				delay(waitTime*10);
+				delay(5000);
 				
 
 				}
@@ -175,7 +134,10 @@ motionDetect = digitalRead(pirPin);
 					analogWrite(REDPIN, 0);
 			}
 	}else if (motionDetect == LOW){
-        appOff();
+	analogWrite(GREENPIN, 0);
+	analogWrite(BLUEPIN, 0);
+	analogWrite(REDPIN, 0);
 	}
 
-}	//end Loop()                
+}	//end Loop()              
+
