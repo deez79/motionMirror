@@ -10,7 +10,7 @@
 
 //mix in PIR Code
 int pirPin = 12;
- 
+int motionDetect= 0; 
 
  
 void setup() {
@@ -18,14 +18,14 @@ void setup() {
   pinMode(GREENPIN, OUTPUT);
   pinMode(BLUEPIN, OUTPUT);
   pinMode(pirPin, INPUT);
-  
 }
  
  
 void loop() {
 int r, g, b;
-if (digitalRead(pirPin) == HIGH)
-     {  
+motionDetect = digitalRead(pirPin);
+	if (motionDetect == HIGH){
+     
 		  // fade from blue to violet
 		  for (r = 0; r < 256; r++) { 
 			analogWrite(REDPIN, r);
@@ -54,8 +54,12 @@ if (digitalRead(pirPin) == HIGH)
 		  // fade from teal to blue
 		  for (g = 255; g > 0; g--) { 
 			analogWrite(GREENPIN, g);
-			delay(FADESPEED);
+			delay(FADESPEED*2);
 		  } 
+	}else if (motionDetect == LOW){
+	analogWrite(GREENPIN, 0);
+	analogWrite(BLUEPIN, 0);
+	analogWrite(REDPIN, 0);
 	}
 	
 }
