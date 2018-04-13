@@ -76,20 +76,62 @@ int control_var_prev_state = 0;
 // Functions
 //*****************************************
 
-void SM_mm () {
+void State_Machine_motion_mirror () {
+	
+	//control_var_prev_state = control_var; // This code should auto record previous state, 
+		// but not sure if it will work with current set up
+	
     switch (control_var) {
+    	
         case 0: // Reset!
             control_var = 1;
+            control_var_prev_state == 0;
             break;
             
-        case 1: // Start 
-            
+        case 1: // Detect
+        	if (motionDetect == LOW && control_var_prev_state == 0) { // Back to Reset! 
+        		control_var = 0;	
+        	}
+        	
+        	if (motionDetect == HIGH && control_var_prev_state == 0) { // From off to Red
+        		control_var = 2;	
+        	}
+        	
+        	if (motionDetect == HIGH && control_var_prev_state == 2) { // From Red to White
+        		control_var = 3;	
+        	}
+        	
+        	if (motionDetect == HIGH && control_var_prev_state == 3) { // From White to White 
+        		control_var = 3;
+        	}
+        	
+        	if (motionDetect == LOW && control_var_prev_state == 3) { // From White to Dim
+        		control_var = 4;	
+        	}
+        	
             break;
             
-        case 2: // 
+        case 2: // Red
+        	control_var = 1;
+        	control_var_prev_state = 2;
+            break;
             
+        case 3: // White
+            control_var = 1;
+        	control_var_prev_state = 3;
+            break;
+            
+        case 4: // Dim
+            control_var = 0;
             break;
     }
+}
+
+void redLight () {
+	for (r = 0; r < 256; r++) { 
+					analogWrite(REDPIN, r);
+					delay(FADESPEED);
+				}
 }
 
 //*****************************************
@@ -101,6 +143,8 @@ void setup() {
     pinMode(GREENPIN, OUTPUT);
     pinMode(BLUEPIN, OUTPUT);
     pinMode(pirPin, INPUT);
+    
+    motionDetect = digitalRead(pirPin);
 
 }	//end setup()
  
@@ -109,14 +153,12 @@ void setup() {
 //*****************************************
 void loop(){  
     
-    motionDetect = digitalRead(pirPin);
     
 	if (motionDetect == HIGH){
 			delay(500);
 			if (motionDetect == HIGH){
-				for (r = 0; r < 256; r++) { 
-					analogWrite(REDPIN, r);
-					delay(FADESPEED);
+				redLight()
+				
 				}
 				delay(1000);
 				for (a = 0; a < 256; a++) { 
